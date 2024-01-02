@@ -44,17 +44,17 @@ func main() {
 		var todo Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			JSONError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		res, err := db.Exec("INSERT INTO todos (name, completed) VALUES (?, ?)", todo.Name, false)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		id, err := res.LastInsertId()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		insertedTodo := Todo{
@@ -95,7 +95,7 @@ func main() {
 	r.Get("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT id, name, completed FROM todos")
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		var todos []Todo
@@ -104,7 +104,7 @@ func main() {
 			var todo Todo
 			err := rows.Scan(&todo.ID, &todo.Name, &todo.Completed)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				JSONError(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			todos = append(todos, todo)
