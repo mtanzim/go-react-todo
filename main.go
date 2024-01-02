@@ -10,7 +10,7 @@ import (
 )
 
 type NewTodo struct {
-	Name      string `json:"name"`
+	Name string `json:"name"`
 }
 
 type Todo struct {
@@ -80,7 +80,24 @@ func main() {
 		w.Write([]byte(response))
 	})
 	r.Get("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Get all todos"))
+		rows, err := db.Query("SELECT id, name, completed FROM todos")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		var todos []Todo
+		defer rows.Close()
+		for rows.Next() {
+			var todo Todo
+			err := rows.Scan(&todo.ID, &todo.Name, &todo.Completed)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			todos = append(todos, todo)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(todos)
 	})
 	http.ListenAndServe(":8080", r)
 }
