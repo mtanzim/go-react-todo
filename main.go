@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/rs/cors"
 	_ "modernc.org/sqlite"
 )
 
@@ -112,5 +113,5 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todos)
 	})
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", cors.Default().Handler(r))
 }
