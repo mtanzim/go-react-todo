@@ -19,6 +19,12 @@ type Todo struct {
 	Completed bool   `json:"completed"`
 }
 
+func JSONError(w http.ResponseWriter, message string, status int) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": message})
+}
+
 func main() {
 
 	db, err := sql.Open("sqlite", "./todo.db")
@@ -76,8 +82,15 @@ func main() {
 	})
 	r.Get("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		response := "get todo with ID: " + id
-		w.Write([]byte(response))
+		row := db.QueryRow("SELECT id, name, completed FROM todos WHERE id = ?", id)
+		var todo Todo
+		err := row.Scan(&todo.ID, &todo.Name, &todo.Completed)
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(todo)
 	})
 	r.Get("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT id, name, completed FROM todos")
