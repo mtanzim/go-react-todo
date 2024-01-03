@@ -23,7 +23,7 @@ function addTodo(name: string): Promise<Todo> {
 function deleteTodo(id: number): Promise<void> {
   return fetch(`${API_ENDPOINT}/${id}`, {
     method: "DELETE",
-  }).then((res) => res.text());
+  }).then((res) => res.json());
 }
 
 function Todo() {

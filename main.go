@@ -53,7 +53,7 @@ func main() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, world"))
 	})
-	r.Post("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		var todo Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
 		if err != nil {
