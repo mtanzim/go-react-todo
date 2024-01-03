@@ -151,7 +151,7 @@ func main() {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		var todos []Todo
+		todos := []Todo{}
 		defer rows.Close()
 		for rows.Next() {
 			var todo Todo

@@ -7,6 +7,8 @@ interface Todo {
   completed: boolean;
 }
 
+type UpdateTodo = Omit<Todo, "id">;
+
 const API_ENDPOINT = `http://localhost:8080/api/v1/todo`;
 
 function fetchTodos(): Promise<Todo[]> {
@@ -17,6 +19,13 @@ function addTodo(name: string): Promise<Todo> {
   return fetch(`${API_ENDPOINT}`, {
     method: "POST",
     body: JSON.stringify({ name }),
+  }).then((res) => res.json());
+}
+
+function updateTodo(id: number, todo: UpdateTodo): Promise<Todo> {
+  return fetch(`${API_ENDPOINT}/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(todo),
   }).then((res) => res.json());
 }
 
@@ -69,6 +78,22 @@ function Todo() {
       setLoading(false);
     }
   }
+  async function handleToggle(id: number, todo: Todo) {
+    try {
+      setLoading(true);
+      const updated = { ...todo, completed: !todo.completed, id: undefined };
+      const res = await updateTodo(id, updated);
+      setTodos((cur) => cur.map((todo) => (todo.id === id ? res : todo)));
+    } catch (err) {
+      if (err instanceof Error) {
+        setErrMsg(err.message);
+        return;
+      }
+      setErrMsg("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleDelete(id: number) {
     try {
@@ -107,8 +132,19 @@ function Todo() {
               style={{ display: "flex", gap: "4px", margin: "4px" }}
               key={todo.id}
             >
-              <p>{todo.name}</p>
+              <p
+                style={
+                  todo.completed
+                    ? { textDecoration: "line-through" }
+                    : { textDecoration: "none" }
+                }
+              >
+                {todo.name}
+              </p>
               <button onClick={() => handleDelete(todo.id)}>Delete</button>
+              <button onClick={() => handleToggle(todo.id, todo)}>
+                {!todo.completed ? "Mark Done" : "Do again"}
+              </button>
             </div>
           ))}
         </div>
