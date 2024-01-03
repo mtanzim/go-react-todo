@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -16,6 +17,11 @@ type NewTodo struct {
 
 type Todo struct {
 	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Completed bool   `json:"completed"`
+}
+
+type UpdatedTodo struct {
 	Name      string `json:"name"`
 	Completed bool   `json:"completed"`
 }
@@ -81,8 +87,31 @@ func main() {
 	})
 	r.Put("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		response := "Update todo with ID: " + id
-		w.Write([]byte(response))
+		idInt, err := strconv.ParseInt(id, 10, 64)
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		var todo UpdatedTodo
+		err = json.NewDecoder(r.Body).Decode(&todo)
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		res, err := db.Exec("UPDATE todos SET name = ?, completed = ? WHERE id = ?", todo.Name, todo.Completed, id)
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusInternalServerError)
+		}
+		rowsUpdated, err := res.RowsAffected()
+		if rowsUpdated == 1 {
+			json.NewEncoder(w).Encode(Todo{
+				ID:        idInt,
+				Name:      todo.Name,
+				Completed: todo.Completed,
+			})
+			return
+		}
+		JSONError(w, "something went wrong", http.StatusBadRequest)
 	})
 	r.Delete("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
