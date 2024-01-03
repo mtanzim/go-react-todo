@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/rs/cors"
+	"github.com/go-chi/cors"
 	_ "modernc.org/sqlite"
 )
 
@@ -38,6 +38,18 @@ func main() {
 	}
 
 	r := chi.NewRouter()
+
+	r.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, world"))
 	})
@@ -74,10 +86,21 @@ func main() {
 	})
 	r.Delete("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		response := "delete todo with ID: " + id
-		w.Write([]byte(response))
+
+		res, err := db.Exec("DELETE FROM todos WHERE id = ?", id)
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		rowsDeleted, err := res.RowsAffected()
+		if err != nil {
+			JSONError(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]int64{"deletedCount": rowsDeleted})
+
 	})
-	r.Delete("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
+	r.Delete("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		response := "delete all todo"
 		w.Write([]byte(response))
 	})
@@ -93,7 +116,7 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todo)
 	})
-	r.Get("/api/v1/todo/", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT id, name, completed FROM todos")
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
@@ -113,5 +136,6 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todos)
 	})
-	http.ListenAndServe(":8080", cors.Default().Handler(r))
+
+	http.ListenAndServe(":8080", r)
 }

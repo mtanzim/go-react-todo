@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import "./App.css";
 
 interface Todo {
@@ -7,7 +7,7 @@ interface Todo {
   completed: boolean;
 }
 
-const API_ENDPOINT = `http://localhost:8080/api/v1/todo/`;
+const API_ENDPOINT = `http://localhost:8080/api/v1/todo`;
 
 function fetchTodos(): Promise<Todo[]> {
   return fetch(`${API_ENDPOINT}`).then((res) => res.json());
@@ -18,6 +18,12 @@ function addTodo(name: string): Promise<Todo> {
     method: "POST",
     body: JSON.stringify({ name }),
   }).then((res) => res.json());
+}
+
+function deleteTodo(id: number): Promise<void> {
+  return fetch(`${API_ENDPOINT}/${id}`, {
+    method: "DELETE",
+  }).then((res) => res.text());
 }
 
 function Todo() {
@@ -64,6 +70,22 @@ function Todo() {
     }
   }
 
+  async function handleDelete(id: number) {
+    try {
+      setLoading(true);
+      await deleteTodo(id);
+      setTodos((cur) => cur.filter((todo) => todo.id !== id));
+    } catch (err) {
+      if (err instanceof Error) {
+        setErrMsg(err.message);
+        return;
+      }
+      setErrMsg("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -72,11 +94,24 @@ function Todo() {
     <div>
       <h1>To do list</h1>
       {todos.length > 0 ? (
-        <ul>
+        <div
+          style={{
+            display: "grid",
+            gridTemplate: "1fr 1fr 1fr",
+            gap: "4px",
+            margin: "12px",
+          }}
+        >
           {todos.map((todo) => (
-            <li>{todo.name}</li>
+            <div
+              style={{ display: "flex", gap: "4px", margin: "4px" }}
+              key={todo.id}
+            >
+              <p>{todo.name}</p>
+              <button onClick={() => handleDelete(todo.id)}>Delete</button>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
         <div>No todos</div>
       )}
