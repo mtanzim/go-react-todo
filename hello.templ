@@ -1,0 +1,16 @@
+package main
+
+templ hello(todos []Todo) {
+	<div>
+		<h1>Hello, this is a plain old TODO app</h1>
+		for _, todo := range todos {
+			<li>{ todo.Name }</li>
+		}
+	</div>
+}
+
+templ errDiv() {
+	<div>
+		<h1>Something went wrong bruh</h1>
+	</div>
+}

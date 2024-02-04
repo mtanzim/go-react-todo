@@ -119,14 +119,7 @@ function Todo() {
     <div>
       <h1>To do list</h1>
       {todos.length > 0 ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplate: "1fr 1fr 1fr",
-            gap: "4px",
-            margin: "12px",
-          }}
-        >
+        <div>
           {todos.map((todo) => (
             <div
               style={{ display: "flex", gap: "4px", margin: "4px" }}

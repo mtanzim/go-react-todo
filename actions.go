@@ -1,0 +1,41 @@
+package main
+
+import (
+	"database/sql"
+)
+
+type TodoDataLayer struct {
+	db *sql.DB
+}
+
+func NewTodoDataLayer(db *sql.DB) *TodoDataLayer {
+	return &TodoDataLayer{db}
+}
+
+func (tdl *TodoDataLayer) GetTodo(id string) (Todo, error) {
+	row := tdl.db.QueryRow("SELECT id, name, completed FROM todos WHERE id = ?", id)
+	var todo Todo
+	err := row.Scan(&todo.ID, &todo.Name, &todo.Completed)
+	if err != nil {
+		return Todo{}, err
+	}
+	return todo, nil
+}
+
+func (tdl *TodoDataLayer) GetAllTodos() ([]Todo, error) {
+	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos")
+	if err != nil {
+		return []Todo{}, err
+	}
+	todos := []Todo{}
+	defer rows.Close()
+	for rows.Next() {
+		var todo Todo
+		err := rows.Scan(&todo.ID, &todo.Name, &todo.Completed)
+		if err != nil {
+			return []Todo{}, err
+		}
+		todos = append(todos, todo)
+	}
+	return todos, nil
+}

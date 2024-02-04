@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -38,6 +39,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	tdl := NewTodoDataLayer(db)
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, name TEXT, completed BOOLEAN)")
 	if err != nil {
 		panic(err)
@@ -57,8 +59,14 @@ func main() {
 	}))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, world"))
+		todos, err := tdl.GetAllTodos()
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		hello(todos).Render(context.Background(), w)
 	})
+
 	r.Post("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		var todo Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
@@ -135,9 +143,7 @@ func main() {
 	})
 	r.Get("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		row := db.QueryRow("SELECT id, name, completed FROM todos WHERE id = ?", id)
-		var todo Todo
-		err := row.Scan(&todo.ID, &todo.Name, &todo.Completed)
+		todo, err := tdl.GetTodo(id)
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -146,22 +152,12 @@ func main() {
 		json.NewEncoder(w).Encode(todo)
 	})
 	r.Get("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query("SELECT id, name, completed FROM todos")
+		todos, err := tdl.GetAllTodos()
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		todos := []Todo{}
-		defer rows.Close()
-		for rows.Next() {
-			var todo Todo
-			err := rows.Scan(&todo.ID, &todo.Name, &todo.Completed)
-			if err != nil {
-				JSONError(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			todos = append(todos, todo)
-		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todos)
 	})
