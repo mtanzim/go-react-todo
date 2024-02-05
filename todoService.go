@@ -4,15 +4,15 @@ import (
 	"database/sql"
 )
 
-type TodoDataLayer struct {
+type todoService struct {
 	db *sql.DB
 }
 
-func NewTodoDataLayer(db *sql.DB) *TodoDataLayer {
-	return &TodoDataLayer{db}
+func NewTodoService(db *sql.DB) *todoService {
+	return &todoService{db}
 }
 
-func (tdl *TodoDataLayer) GetTodo(id string) (Todo, error) {
+func (tdl *todoService) GetTodo(id string) (Todo, error) {
 	row := tdl.db.QueryRow("SELECT id, name, completed FROM todos WHERE id = ?", id)
 	var todo Todo
 	err := row.Scan(&todo.ID, &todo.Name, &todo.Completed)
@@ -22,7 +22,7 @@ func (tdl *TodoDataLayer) GetTodo(id string) (Todo, error) {
 	return todo, nil
 }
 
-func (tdl *TodoDataLayer) GetAllTodos() ([]Todo, error) {
+func (tdl *todoService) GetAllTodos() ([]Todo, error) {
 	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos")
 	if err != nil {
 		return []Todo{}, err

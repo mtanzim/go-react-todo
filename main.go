@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	tdl := NewTodoDataLayer(db)
+	tds := NewTodoService(db)
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, name TEXT, completed BOOLEAN)")
 	if err != nil {
 		panic(err)
@@ -59,12 +59,12 @@ func main() {
 	}))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		todos, err := tdl.GetAllTodos()
+		todos, err := tds.GetAllTodos()
 		if err != nil {
 			errDiv().Render(context.Background(), w)
 			return
 		}
-		hello(todos).Render(context.Background(), w)
+		todoDiv(todos).Render(context.Background(), w)
 	})
 
 	r.Post("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +143,7 @@ func main() {
 	})
 	r.Get("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		todo, err := tdl.GetTodo(id)
+		todo, err := tds.GetTodo(id)
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -152,7 +152,7 @@ func main() {
 		json.NewEncoder(w).Encode(todo)
 	})
 	r.Get("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
-		todos, err := tdl.GetAllTodos()
+		todos, err := tds.GetAllTodos()
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
