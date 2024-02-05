@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -38,6 +39,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	tds := NewTodoService(db)
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY, name TEXT, completed BOOLEAN)")
 	if err != nil {
 		panic(err)
@@ -57,8 +59,26 @@ func main() {
 	}))
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, world"))
+		todos, err := tds.GetAllTodos()
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		todoDiv(todos).Render(context.Background(), w)
 	})
+
+	r.Post("/todo", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		newTodoTitle := r.Form.Get("newTodo")
+		newTodo, err := tds.AddTodo(newTodoTitle)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		todoCard(newTodo).Render(context.Background(), w)
+
+	})
+
 	r.Post("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		var todo Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
@@ -66,20 +86,10 @@ func main() {
 			JSONError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		res, err := db.Exec("INSERT INTO todos (name, completed) VALUES (?, ?)", todo.Name, false)
+		insertedTodo, err := tds.AddTodo(todo.Name)
 		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
+			JSONError(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		insertedTodo := Todo{
-			ID:        id,
-			Name:      todo.Name,
-			Completed: todo.Completed,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(insertedTodo)
@@ -113,15 +123,40 @@ func main() {
 		}
 		JSONError(w, "something went wrong", http.StatusBadRequest)
 	})
+
+	r.Put("/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		r.ParseForm()
+		completed := r.Form.Get("isTodoCompleted")
+		isCompleted := false
+		if completed == "true" {
+			isCompleted = true
+		}
+		updatedTodo, err := tds.UpdateTodo(id, isCompleted)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		todoCard(updatedTodo).Render(context.Background(), w)
+	})
+
+	r.Delete("/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		_, err := tds.RemoveTodo(id)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+	})
 	r.Delete("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
-		res, err := db.Exec("DELETE FROM todos WHERE id = ?", id)
-		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		rowsDeleted, err := res.RowsAffected()
+		rowsDeleted, err := tds.RemoveTodo(id)
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -135,9 +170,7 @@ func main() {
 	})
 	r.Get("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		row := db.QueryRow("SELECT id, name, completed FROM todos WHERE id = ?", id)
-		var todo Todo
-		err := row.Scan(&todo.ID, &todo.Name, &todo.Completed)
+		todo, err := tds.GetTodo(id)
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -146,22 +179,12 @@ func main() {
 		json.NewEncoder(w).Encode(todo)
 	})
 	r.Get("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
-		rows, err := db.Query("SELECT id, name, completed FROM todos")
+		todos, err := tds.GetAllTodos()
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		todos := []Todo{}
-		defer rows.Close()
-		for rows.Next() {
-			var todo Todo
-			err := rows.Scan(&todo.ID, &todo.Name, &todo.Completed)
-			if err != nil {
-				JSONError(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			todos = append(todos, todo)
-		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(todos)
 	})

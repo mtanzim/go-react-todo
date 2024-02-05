@@ -1,0 +1,128 @@
+package main
+
+import "fmt"
+
+templ layout() {
+	<html lang="en" data-theme="cupcake">
+		<head>
+			<meta charset="UTF-8"/>
+			<title>Todo Webpage</title>
+			// todo: tailwind should not be on cdn
+			<link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.1/dist/full.min.css" rel="stylesheet" type="text/css"/>
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}
+
+templ todoDiv(todos []Todo) {
+	@layout() {
+		<div>
+			<h1 class="text-4xl m-12">HTMX Todo App</h1>
+			@newTodo()
+			<div id="todoList" class="flex m-12 flex-wrap">
+				for _, todo := range todos {
+					@todoCard(todo)
+				}
+			</div>
+		</div>
+	}
+}
+
+templ todoCard(todo Todo) {
+	@todoCardWrapper(todo) {
+		<div class="card-body">
+			<h2 class="card-title">{ todo.Name }</h2>
+			<div class="card-actions justify-end">
+				@completeButton(todo)
+				<button
+					hx-trigger="click"
+					hx-swap="outerHTML"
+					hx-delete={ fmt.Sprintf("/todo/%d", todo.ID) }
+					hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+					class="btn btn-error"
+				>Delete</button>
+			</div>
+		</div>
+	}
+}
+
+templ todoCardWrapper(todo Todo) {
+	if todo.Completed {
+		<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-green-100 shadow-xl m-4">
+			{ children... }
+		</div>
+	} else {
+		<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-100 shadow-xl m-4">
+			{ children... }
+		</div>
+	}
+}
+
+templ completeButton(todo Todo) {
+	if todo.Completed {
+		<form
+			hx-swap="outerHTML"
+			hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+			hx-put={ fmt.Sprintf("/todo/%d", todo.ID) }
+			hx-trigger="click"
+		>
+			<input
+				name="isTodoCompleted"
+				value="false"
+				type="hidden"
+			/>
+			<input
+				class="btn btn-success"
+				type="submit"
+				value="Do again"
+			/>
+		</form>
+	} else {
+		<form
+			hx-swap="outerHTML"
+			hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+			hx-put={ fmt.Sprintf("/todo/%d", todo.ID) }
+			hx-trigger="click"
+		>
+			<input
+				name="isTodoCompleted"
+				value="true"
+				type="hidden"
+			/>
+			<input
+				class="btn btn-success"
+				type="submit"
+				value="Complete"
+			/>
+		</form>
+	}
+}
+
+templ newTodo() {
+	<div class="ml-12">
+		<input
+			name="newTodo"
+			hx-post="/todo"
+			hx-target="#todoList"
+			hx-swap="afterbegin"
+			type="text"
+			placeholder="Add a new todo"
+			class="input input-bordered input-primary w-full max-w-xs"
+		/>
+		<button
+			class="btn btn-primary ml-4"
+		>Add</button>
+	</div>
+}
+
+templ errDiv() {
+	@layout() {
+		<div>
+			<h1 class="text-xl">Something went wrong</h1>
+		</div>
+	}
+}
