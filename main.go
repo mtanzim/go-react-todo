@@ -123,6 +123,27 @@ func main() {
 		}
 		JSONError(w, "something went wrong", http.StatusBadRequest)
 	})
+
+	r.Put("/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		r.ParseForm()
+		completed := r.Form.Get("isTodoCompleted")
+		isCompleted := false
+		if completed == "true" {
+			isCompleted = true
+		}
+		updatedTodo, err := tds.UpdateTodo(id, isCompleted)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		todoCard(updatedTodo).Render(context.Background(), w)
+	})
+
 	r.Delete("/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 

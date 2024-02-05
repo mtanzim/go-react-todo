@@ -37,6 +37,7 @@ templ todoCard(todo Todo) {
 		<div class="card-body">
 			<h2 class="card-title">{ todo.Name }</h2>
 			<div class="card-actions justify-end">
+				@completeButton(todo)
 				<button
 					hx-trigger="click"
 					hx-swap="outerHTML"
@@ -47,6 +48,46 @@ templ todoCard(todo Todo) {
 			</div>
 		</div>
 	</div>
+}
+
+templ completeButton(todo Todo) {
+	if todo.Completed {
+		<form
+			hx-swap="outerHTML"
+			hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+			hx-put={ fmt.Sprintf("/todo/%d", todo.ID) }
+			hx-trigger="click"
+		>
+			<input
+				name="isTodoCompleted"
+				value="false"
+				type="hidden"
+			/>
+			<input
+				class="btn btn-success"
+				type="submit"
+				value="Do again"
+			/>
+		</form>
+	} else {
+		<form
+			hx-swap="outerHTML"
+			hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+			hx-put={ fmt.Sprintf("/todo/%d", todo.ID) }
+			hx-trigger="click"
+		>
+			<input
+				name="isTodoCompleted"
+				value="true"
+				type="hidden"
+			/>
+			<input
+				class="btn btn-success"
+				type="submit"
+				value="Complete"
+			/>
+		</form>
+	}
 }
 
 templ newTodo() {

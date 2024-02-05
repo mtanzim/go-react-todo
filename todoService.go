@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type todoService struct {
@@ -51,6 +52,20 @@ func (tdl *todoService) RemoveTodo(id string) (int64, error) {
 		return -1, err
 	}
 	return rowsDeleted, nil
+}
+
+func (tdl *todoService) UpdateTodo(id string, isCompleted bool) (Todo, error) {
+
+	res, err := tdl.db.Exec("UPDATE todos SET completed = ? WHERE id = ?",  isCompleted, id)
+	if err != nil {
+		return Todo{}, err
+	}
+	rowsUpdated, err := res.RowsAffected()
+	if rowsUpdated == 1 {
+		return tdl.GetTodo(id)
+	}
+
+	return Todo{}, errors.New("Failed to update todo")
 }
 
 func (tdl *todoService) GetAllTodos() ([]Todo, error) {
