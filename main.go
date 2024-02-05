@@ -86,20 +86,10 @@ func main() {
 			JSONError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		res, err := db.Exec("INSERT INTO todos (name, completed) VALUES (?, ?)", todo.Name, false)
+		insertedTodo, err := tds.AddTodo(todo.Name)
 		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
+			JSONError(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-		id, err := res.LastInsertId()
-		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		insertedTodo := Todo{
-			ID:        id,
-			Name:      todo.Name,
-			Completed: todo.Completed,
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(insertedTodo)
