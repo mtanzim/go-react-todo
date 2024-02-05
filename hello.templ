@@ -8,6 +8,7 @@ templ layout() {
 			// todo: tailwind should not be on cdn
 			<link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.1/dist/full.min.css" rel="stylesheet" type="text/css"/>
 			<script src="https://cdn.tailwindcss.com"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 		</head>
 		<body>
 			{ children... }
@@ -42,8 +43,16 @@ templ todoCard (todo Todo) {
 
 templ newTodo() {
 	<div class="ml-12">
-		<input type="text" placeholder="Add a new todo" class="input input-bordered input-primary w-full max-w-xs"/>
-		<button class="btn btn-primary ml-4">Add</button>
+		<input
+			name="newTodo"
+			hx-post="/todo"
+			type="text"
+			placeholder="Add a new todo"
+			class="input input-bordered input-primary w-full max-w-xs"
+		/>
+		<button
+			class="btn btn-primary ml-4"
+		>Add</button>
 	</div>
 }
 

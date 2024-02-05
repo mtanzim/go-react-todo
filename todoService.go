@@ -22,6 +22,24 @@ func (tdl *todoService) GetTodo(id string) (Todo, error) {
 	return todo, nil
 }
 
+func (tdl *todoService) AddTodo(title string) (Todo, error) {
+
+	res, err := tdl.db.Exec("INSERT INTO todos (name, completed) VALUES (?, ?)", title, false)
+	if err != nil {
+		return Todo{}, err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return Todo{}, err
+	}
+	insertedTodo := Todo{
+		ID:        id,
+		Name:      title,
+		Completed: false,
+	}
+	return insertedTodo, nil
+}
+
 func (tdl *todoService) GetAllTodos() ([]Todo, error) {
 	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos")
 	if err != nil {

@@ -67,6 +67,18 @@ func main() {
 		todoDiv(todos).Render(context.Background(), w)
 	})
 
+	r.Post("/todo", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		newTodoTitle := r.Form.Get("newTodo")
+		newTodo, err := tds.AddTodo(newTodoTitle)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+		todoCard(newTodo).Render(context.Background(), w)
+
+	})
+
 	r.Post("/api/v1/todo", func(w http.ResponseWriter, r *http.Request) {
 		var todo Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
