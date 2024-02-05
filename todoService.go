@@ -40,6 +40,19 @@ func (tdl *todoService) AddTodo(title string) (Todo, error) {
 	return insertedTodo, nil
 }
 
+func (tdl *todoService) RemoveTodo(id string) (int64, error) {
+
+	res, err := tdl.db.Exec("DELETE FROM todos WHERE id = ?", id)
+	if err != nil {
+		return -1, err
+	}
+	rowsDeleted, err := res.RowsAffected()
+	if err != nil {
+		return -1, err
+	}
+	return rowsDeleted, nil
+}
+
 func (tdl *todoService) GetAllTodos() ([]Todo, error) {
 	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos ORDER BY id DESC")
 	if err != nil {

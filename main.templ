@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 templ layout() {
 	<html lang="en" data-theme="cupcake">
 		<head>
@@ -30,12 +32,18 @@ templ todoDiv(todos []Todo) {
 	}
 }
 
-templ todoCard (todo Todo) {
-	<div class="card w-96 bg-base-100 shadow-xl m-4">
+templ todoCard(todo Todo) {
+	<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-base-100 shadow-xl m-4">
 		<div class="card-body">
 			<h2 class="card-title">{ todo.Name }</h2>
 			<div class="card-actions justify-end">
-				<button class="btn btn-error">Delete</button>
+				<button
+					hx-trigger="click"
+					hx-swap="outerHTML"
+					hx-delete={ fmt.Sprintf("/todo/%d", todo.ID) }
+					hx-target={ fmt.Sprintf("#todo-card-%d", todo.ID) }
+					class="btn btn-error"
+				>Delete</button>
 			</div>
 		</div>
 	</div>
@@ -61,7 +69,7 @@ templ newTodo() {
 templ errDiv() {
 	@layout() {
 		<div>
-			<h1 class="text-xl">Something went wrong bruh</h1>
+			<h1 class="text-xl">Something went wrong</h1>
 		</div>
 	}
 }

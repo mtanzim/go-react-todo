@@ -123,15 +123,19 @@ func main() {
 		}
 		JSONError(w, "something went wrong", http.StatusBadRequest)
 	})
+	r.Delete("/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+
+		_, err := tds.RemoveTodo(id)
+		if err != nil {
+			errDiv().Render(context.Background(), w)
+			return
+		}
+	})
 	r.Delete("/api/v1/todo/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
 
-		res, err := db.Exec("DELETE FROM todos WHERE id = ?", id)
-		if err != nil {
-			JSONError(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		rowsDeleted, err := res.RowsAffected()
+		rowsDeleted, err := tds.RemoveTodo(id)
 		if err != nil {
 			JSONError(w, err.Error(), http.StatusInternalServerError)
 			return
