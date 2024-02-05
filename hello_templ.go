@@ -69,7 +69,7 @@ func todoDiv(todos []Todo) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex m-12 flex-wrap\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"todoList\" class=\"flex m-12 flex-wrap\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -149,7 +149,7 @@ func newTodo() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"ml-12\"><input name=\"newTodo\" hx-post=\"/todo\" type=\"text\" placeholder=\"Add a new todo\" class=\"input input-bordered input-primary w-full max-w-xs\"> <button class=\"btn btn-primary ml-4\">Add</button></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"ml-12\"><input name=\"newTodo\" hx-post=\"/todo\" hx-target=\"#todoList\" hx-swap=\"afterbegin\" type=\"text\" placeholder=\"Add a new todo\" class=\"input input-bordered input-primary w-full max-w-xs\"> <button class=\"btn btn-primary ml-4\">Add</button></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

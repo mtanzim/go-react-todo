@@ -21,7 +21,7 @@ templ todoDiv(todos []Todo) {
 		<div>
 			<h1 class="text-4xl m-12">HTMX Todo App</h1>
 			@newTodo()
-			<div class="flex m-12 flex-wrap">
+			<div id="todoList" class="flex m-12 flex-wrap">
 				for _, todo := range todos {
 					@todoCard(todo)
 				}
@@ -46,6 +46,8 @@ templ newTodo() {
 		<input
 			name="newTodo"
 			hx-post="/todo"
+			hx-target="#todoList"
+			hx-swap="afterbegin"
 			type="text"
 			placeholder="Add a new todo"
 			class="input input-bordered input-primary w-full max-w-xs"

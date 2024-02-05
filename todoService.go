@@ -41,7 +41,7 @@ func (tdl *todoService) AddTodo(title string) (Todo, error) {
 }
 
 func (tdl *todoService) GetAllTodos() ([]Todo, error) {
-	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos")
+	rows, err := tdl.db.Query("SELECT id, name, completed FROM todos ORDER BY id DESC")
 	if err != nil {
 		return []Todo{}, err
 	}
