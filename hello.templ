@@ -1,7 +1,7 @@
 package main
 
 templ layout() {
-	<html lang="en">
+	<html lang="en" data-theme="cupcake">
 		<head>
 			<meta charset="UTF-8"/>
 			<title>Todo Webpage</title>
@@ -19,20 +19,32 @@ templ todoDiv(todos []Todo) {
 	@layout() {
 		<div>
 			<h1 class="text-4xl m-12">HTMX Todo App</h1>
+			@newTodo()
 			<div class="flex m-12 flex-wrap">
 				for _, todo := range todos {
-					<div class="card w-96 bg-base-100 shadow-xl m-4">
-						<div class="card-body">
-							<h2 class="card-title">{ todo.Name }</h2>
-							<div class="card-actions justify-end">
-								<button class="btn btn-danger">Delete</button>
-							</div>
-						</div>
-					</div>
+					@todoCard(todo)
 				}
 			</div>
 		</div>
 	}
+}
+
+templ todoCard (todo Todo) {
+	<div class="card w-96 bg-base-100 shadow-xl m-4">
+		<div class="card-body">
+			<h2 class="card-title">{ todo.Name }</h2>
+			<div class="card-actions justify-end">
+				<button class="btn btn-error">Delete</button>
+			</div>
+		</div>
+	</div>
+}
+
+templ newTodo() {
+	<div class="ml-12">
+		<input type="text" placeholder="Add a new todo" class="input input-bordered input-primary w-full max-w-xs"/>
+		<button class="btn btn-primary ml-4">Add</button>
+	</div>
 }
 
 templ errDiv() {
