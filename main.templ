@@ -33,7 +33,7 @@ templ todoDiv(todos []Todo) {
 }
 
 templ todoCard(todo Todo) {
-	<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-base-100 shadow-xl m-4">
+	@todoCardWrapper(todo) {
 		<div class="card-body">
 			<h2 class="card-title">{ todo.Name }</h2>
 			<div class="card-actions justify-end">
@@ -47,7 +47,19 @@ templ todoCard(todo Todo) {
 				>Delete</button>
 			</div>
 		</div>
-	</div>
+	}
+}
+
+templ todoCardWrapper(todo Todo) {
+	if todo.Completed {
+		<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-green-100 shadow-xl m-4">
+			{ children... }
+		</div>
+	} else {
+		<div id={ fmt.Sprintf("todo-card-%d", todo.ID) } class="card w-96 bg-100 shadow-xl m-4">
+			{ children... }
+		</div>
+	}
 }
 
 templ completeButton(todo Todo) {
